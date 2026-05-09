@@ -21,7 +21,45 @@
 - 可选调用大模型 API 生成模型推荐号码
 - 支持控制是否输出推荐理由
 - 自动推算下一期开奖期号和开奖日期
+- 支持将 API Key 和运行参数放到独立配置文件中
 - 支持 PyCharm 直接运行
+
+---
+
+## 项目结构
+
+推荐项目结构如下：
+
+```text
+cn-lottery-predict/
+├── main.py
+├── config.example.py
+├── config.py
+├── README.md
+├── LICENSE
+├── .gitignore
+└── requirements.txt
+```
+
+说明：
+
+```text
+main.py              主程序文件
+config.example.py    示例配置文件，可以上传到 GitHub
+config.py            本地真实配置文件，不要上传到 GitHub
+README.md            项目说明文件
+LICENSE              开源许可证
+.gitignore           Git 忽略规则
+requirements.txt     依赖列表
+```
+
+重点：
+
+```text
+config.py 中可以填写真实 API Key
+config.py 不应该上传到 GitHub
+config.example.py 用于给其他用户参考
+```
 
 ---
 
@@ -71,10 +109,22 @@
 统计推荐号码：
 第 01 组：红球 [01 06 16 18 27 29]  蓝球 [16]
 第 02 组：红球 [06 08 15 23 26 30]  蓝球 [16]
+第 03 组：红球 [05 06 10 13 22 25]  蓝球 [01]
 
 模型推荐号码：
 第 01 组：红球 [02 07 15 22 28 31]  蓝球 [14]
 第 02 组：红球 [06 09 13 18 24 30]  蓝球 [11]
+第 03 组：红球 [03 08 15 21 27 30]  蓝球 [01]
+```
+
+如果开启推荐理由：
+
+```text
+统计推荐号码理由：
+第 01 组：红球 [01 06 16 18 27 29]  蓝球 [16]    理由：和值97，奇偶3:3，三区2:2:2，热号、冷号、遗漏值综合
+
+模型推荐号码理由：
+第 01 组：红球 [02 07 15 22 28 31]  蓝球 [14]    理由：和值105，奇偶3:3，三区2:2:2，热冷结合
 ```
 
 ---
@@ -87,7 +137,7 @@
 Python 3.9+
 ```
 
-依赖库：
+安装依赖：
 
 ```bash
 pip install requests openai
@@ -99,6 +149,19 @@ pip install requests openai
 pip install requests
 ```
 
+也可以创建 `requirements.txt`：
+
+```text
+requests
+openai
+```
+
+然后执行：
+
+```bash
+pip install -r requirements.txt
+```
+
 ---
 
 ## 快速开始
@@ -106,7 +169,7 @@ pip install requests
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/你的GitHub用户名/cn-lottery-predict.git
+git clone https://github.com/icekst/cn-lottery-predict.git
 cd cn-lottery-predict
 ```
 
@@ -116,7 +179,53 @@ cd cn-lottery-predict
 pip install requests openai
 ```
 
-### 3. 运行程序
+### 3. 复制配置文件
+
+项目中建议提供一个示例配置文件：
+
+```text
+config.example.py
+```
+
+首次运行前，请复制一份并重命名为：
+
+```text
+config.py
+```
+
+Git Bash 可以执行：
+
+```bash
+cp config.example.py config.py
+```
+
+Windows 也可以直接手动复制：
+
+```text
+复制 config.example.py
+粘贴到同一目录
+重命名为 config.py
+```
+
+### 4. 修改 config.py
+
+打开 `config.py`，根据需要填写自己的配置。
+
+如果不使用大模型 API，可以设置：
+
+```python
+ENABLE_LLM_PREDICT = False
+```
+
+如果要使用大模型 API，请填写：
+
+```python
+API_KEY = "你的真实API_KEY"
+BASE_URL = "你的接口地址"
+MODEL_NAME = "你的模型名称"
+```
+
+### 5. 运行程序
 
 如果主程序文件名是 `main.py`：
 
@@ -124,21 +233,44 @@ pip install requests openai
 python main.py
 ```
 
-如果你的主程序文件名是 `ssq_predict.py`：
-
-```bash
-python ssq_predict.py
-```
-
 也可以直接使用 PyCharm 打开项目，右键主程序文件运行。
 
 ---
 
-## 参数配置说明
+## 配置文件说明
 
-程序顶部提供了常用配置项，可以直接修改。
+本项目推荐将所有可变参数放到 `config.py` 中，避免把 API Key 写死在主程序中。
+
+### config.example.py 示例
 
 ```python
+# -*- coding: utf-8 -*-
+"""
+示例配置文件
+
+使用方法：
+1. 复制本文件
+2. 重命名为 config.py
+3. 在 config.py 中填写自己的 API Key 和相关参数
+"""
+
+# ============================================================
+# 大模型 API 配置
+# ============================================================
+
+API_KEY = "请在这里填入你的API_KEY"
+
+BASE_URL = "https://api.openai.com/v1"
+MODEL_NAME = "gpt-4o-mini"
+
+# 如果你的接口不支持 json_schema，请改成 False
+USE_JSON_SCHEMA = True
+
+
+# ============================================================
+# 程序功能配置
+# ============================================================
+
 # 是否输出推荐理由
 SHOW_REASON = True
 
@@ -164,6 +296,7 @@ LOOKBACK_COUNT = 300
 SEND_RECENT_ISSUES_TO_LLM = 80
 
 # 随机种子
+# None 表示每次运行结果不同
 RANDOM_SEED = None
 ```
 
@@ -171,10 +304,10 @@ RANDOM_SEED = None
 
 ## 大模型 API 配置
 
-如果你要使用大模型 API，需要修改代码顶部配置：
+如果你要使用 OpenAI 官方接口，可以这样配置：
 
 ```python
-API_KEY = "请在这里填入你的API_KEY"
+API_KEY = "你的OpenAI_API_KEY"
 BASE_URL = "https://api.openai.com/v1"
 MODEL_NAME = "gpt-4o-mini"
 ```
@@ -187,7 +320,7 @@ BASE_URL = "你的接口地址"
 MODEL_NAME = "你的模型名称"
 ```
 
-如果你的接口不支持 `json_schema`，请改成：
+如果你的接口不支持 `json_schema`，请修改：
 
 ```python
 USE_JSON_SCHEMA = False
@@ -197,7 +330,7 @@ USE_JSON_SCHEMA = False
 
 ## 不使用大模型 API
 
-如果你只想使用本地统计推荐号码，不想调用大模型 API，可以设置：
+如果你只想使用本地统计推荐号码，不想调用大模型 API，可以在 `config.py` 中设置：
 
 ```python
 ENABLE_LLM_PREDICT = False
@@ -209,17 +342,10 @@ ENABLE_LLM_PREDICT = False
 
 ## 输出推荐理由
 
-如果需要输出推荐理由：
+如果需要输出推荐理由，在 `config.py` 中设置：
 
 ```python
 SHOW_REASON = True
-```
-
-输出示例：
-
-```text
-统计推荐号码理由：
-第 01 组：红球 [01 06 16 18 27 29]  蓝球 [16]    理由：和值97，奇偶3:3，三区2:2:2，热号、冷号、遗漏值综合
 ```
 
 如果不需要推荐理由：
@@ -228,7 +354,104 @@ SHOW_REASON = True
 SHOW_REASON = False
 ```
 
-程序只会输出推荐号码。
+---
+
+## main.py 中如何导入配置
+
+主程序中应该从 `config.py` 导入配置，例如：
+
+```python
+try:
+    from config import (
+        API_KEY,
+        BASE_URL,
+        MODEL_NAME,
+        USE_JSON_SCHEMA,
+        SHOW_REASON,
+        ENABLE_STAT_PREDICT,
+        ENABLE_LLM_PREDICT,
+        STAT_PREDICT_COUNT,
+        LLM_PREDICT_COUNT,
+        HISTORY_COUNT,
+        LOOKBACK_COUNT,
+        SEND_RECENT_ISSUES_TO_LLM,
+        RANDOM_SEED,
+    )
+except ImportError:
+    raise RuntimeError(
+        "未找到 config.py 配置文件。\\n"
+        "请复制 config.example.py 并重命名为 config.py，"
+        "然后填写你的 API_KEY 和相关配置。"
+    )
+```
+
+---
+
+## .gitignore 配置
+
+为了避免真实 API Key 被上传到 GitHub，请确保 `.gitignore` 中包含以下内容：
+
+```gitignore
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# PyCharm / IDE
+.idea/
+.vscode/
+
+# Local config / API key
+config.py
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build / dist
+build/
+dist/
+*.egg-info/
+```
+
+重点是：
+
+```gitignore
+config.py
+.env
+.env.*
+```
+
+这可以避免本地真实配置文件和环境变量文件被提交到 GitHub。
+
+---
+
+## 如果 config.py 已经被 Git 跟踪过
+
+如果你之前已经把 `config.py` 或包含真实 API Key 的文件提交过，`.gitignore` 不会自动取消跟踪。
+
+需要执行：
+
+```bash
+git rm --cached config.py
+git commit -m "Stop tracking local config file"
+git push
+```
+
+如果你已经把真实 API Key 推送到了公开仓库，请立即去大模型平台后台删除或重置旧 Key。  
+已经推送到 GitHub 的 Key 应视为泄露，不能继续使用。
 
 ---
 
@@ -274,52 +497,19 @@ SHOW_REASON = False
 
 ---
 
-## 项目结构建议
-
-```text
-cn-lottery-predict/
-├── main.py
-├── README.md
-├── LICENSE
-├── .gitignore
-└── requirements.txt
-```
-
-如果你想添加 `requirements.txt`，内容可以写：
-
-```text
-requests
-openai
-```
-
----
-
-## Git 忽略文件建议
-
-建议 `.gitignore` 中至少包含：
-
-```gitignore
-__pycache__/
-*.py[cod]
-venv/
-.venv/
-env/
-.idea/
-*.log
-.env
-.DS_Store
-Thumbs.db
-```
-
-特别注意：
-
-不要把真实 API Key 提交到 GitHub。
-
----
-
 ## 常见问题
 
-### 1. 运行时报错：未安装 requests
+### 1. 运行时报错：未找到 config.py 配置文件
+
+请先复制配置示例文件：
+
+```bash
+cp config.example.py config.py
+```
+
+然后打开 `config.py` 填写配置。
+
+### 2. 运行时报错：未安装 requests
 
 执行：
 
@@ -327,7 +517,7 @@ Thumbs.db
 pip install requests
 ```
 
-### 2. 运行时报错：未安装 openai
+### 3. 运行时报错：未安装 openai
 
 执行：
 
@@ -335,15 +525,15 @@ pip install requests
 pip install openai
 ```
 
-如果你不使用大模型 API，可以设置：
+如果你不使用大模型 API，可以在 `config.py` 中设置：
 
 ```python
 ENABLE_LLM_PREDICT = False
 ```
 
-### 3. 大模型 API 返回 JSON 解析失败
+### 4. 大模型 API 返回 JSON 解析失败
 
-可以尝试设置：
+可以尝试在 `config.py` 中设置：
 
 ```python
 USE_JSON_SCHEMA = False
@@ -351,15 +541,51 @@ USE_JSON_SCHEMA = False
 
 或者检查所使用的大模型平台是否兼容 OpenAI SDK。
 
-### 4. GitHub 推送时不要上传 API Key
+### 5. GitHub 推送时不要上传 API Key
 
-建议不要在代码中写入真实 Key。上传前请确认：
+请不要把真实 API Key 写进 `main.py` 或提交到 GitHub。
 
-```python
-API_KEY = "请在这里填入你的API_KEY"
+推荐做法：
+
+```text
+config.example.py 上传 GitHub
+config.py 不上传 GitHub
 ```
 
-或者改成从环境变量读取。
+并确保 `.gitignore` 中包含：
+
+```gitignore
+config.py
+.env
+.env.*
+```
+
+---
+
+## Git 提交建议
+
+修改配置文件分离后，建议提交这些文件：
+
+```bash
+git add main.py config.example.py .gitignore README.md
+git commit -m "Move config to separate file"
+git push
+```
+
+不要提交：
+
+```text
+config.py
+.env
+```
+
+可以通过下面命令检查是否会提交敏感文件：
+
+```bash
+git status
+```
+
+如果看到 `config.py` 出现在待提交列表中，说明 `.gitignore` 没有生效，或者该文件之前已经被 Git 跟踪。
 
 ---
 
@@ -375,7 +601,7 @@ API_KEY = "请在这里填入你的API_KEY"
 
 Author: xutao
 
-GitHub: https://github.com/你的GitHub用户名
+GitHub: https://github.com/icekst
 
 ---
 
