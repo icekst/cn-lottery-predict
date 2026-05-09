@@ -1,22 +1,46 @@
+# =========================
 # Python cache
+# =========================
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
 
+# =========================
 # Virtual environment
+# =========================
 venv/
 .venv/
 env/
+ENV/
 
-# PyCharm
+# =========================
+# PyCharm / IDE
+# =========================
 .idea/
+.vscode/
 
+# =========================
+# Local config / API key
+# =========================
+config.py
+.env
+.env.*
+
+# =========================
 # Logs
+# =========================
 *.log
 
-# Environment variables / API keys
-.env
-
+# =========================
 # OS files
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# Build / dist
+# =========================
+build/
+dist/
+*.egg-info/
